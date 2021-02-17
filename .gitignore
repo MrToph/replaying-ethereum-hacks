@@ -1,0 +1,9 @@
+node_modules
+
+#Hardhat files
+cache
+artifacts
+
+git-crypt-key
+.env
+tenderly.yaml
