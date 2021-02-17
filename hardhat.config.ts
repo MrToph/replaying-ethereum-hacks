@@ -23,6 +23,7 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       // add missing versions here
+      { version: "0.4.11" },
       { version: "0.7.0" },
       { version: "0.8.0" },
     ],
