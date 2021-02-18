@@ -34,7 +34,7 @@ const config: HardhatUserConfig = {
       loggingEnabled: false,
       forking: {
         url: ARCHIVE_URL, // https://eth-mainnet.alchemyapi.io/v2/SECRET`,
-        blockNumber: 11800000,
+        blockNumber: 11800000, // we will set this in each test
       },
     },
     // local: {

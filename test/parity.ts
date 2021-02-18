@@ -52,16 +52,17 @@ const withdraw = async () => {
 
 describe("Parity Hack 2", function () {
   it("allows withdrawals before being killed", async function () {
-    const balanceBefore = await victim.provider!.getBalance(wallet.address);
+    const balanceBefore = await ethers.provider.getBalance(wallet.address);
 
     tx = await withdraw();
 
-    const balanceAfter = await victim.provider!.getBalance(wallet.address);
-    expect(balanceAfter.lt(balanceBefore), "withdrawal did not work").to.be.true;
+    const balanceAfter = await ethers.provider.getBalance(wallet.address);
+    expect(balanceAfter.lt(balanceBefore), "withdrawal did not work").to.be
+      .true;
   });
 
   it("breaks withdrawals after being killed", async function () {
-    const balanceBefore = await victim.provider!.getBalance(wallet.address);
+    const balanceBefore = await ethers.provider.getBalance(wallet.address);
 
     // first call initWallet to make us the owner
     tx = await walletLib.initWallet(
@@ -70,14 +71,15 @@ describe("Parity Hack 2", function () {
       ethers.utils.parseEther(`1`)
     );
     // then kill it
-    tx = await walletLib.kill(
-      await attacker.getAddress()
-    );
+    tx = await walletLib.kill(await attacker.getAddress());
 
     // withdrawal does not revert, is simply a noop now
     tx = await withdraw();
 
-    const balanceAfter = await victim.provider!.getBalance(wallet.address);
-    expect(balanceAfter.eq(balanceBefore), "withdrawal did not work").to.be.true;
+    const balanceAfter = await ethers.provider.getBalance(wallet.address);
+    expect(
+      balanceAfter.eq(balanceBefore),
+      "withdrawal worked but should not"
+    ).to.be.true;
   });
 });
