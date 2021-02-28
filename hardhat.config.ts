@@ -24,6 +24,7 @@ const config: HardhatUserConfig = {
     compilers: [
       // add missing versions here
       { version: "0.4.11" },
+      { version: "0.6.2" },
       { version: "0.7.0" },
       { version: "0.8.0" },
     ],
