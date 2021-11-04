@@ -38,9 +38,9 @@ const config: HardhatUserConfig = {
         blockNumber: 11800000, // we will set this in each test
       },
     },
-    // local: {
-    //   url: "http://127.0.0.1:8545",
-    // },
+    local: {
+      url: "http://127.0.0.1:8545",
+    },
   },
   mocha: {
     timeout: 300 * 1e3,
